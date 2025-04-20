@@ -264,6 +264,57 @@ join course c on a.courseID= c.courseID
 join instructor i on c.instructorID=i.instructorID
 join assignment_submission s on a.assignmentID=s.assignmentID;
 
+-- creating show case the required details to provide restriction on the data
+
+-- 1. student view : view their own assignment with course info, Purpose: Shows all assignments that a student is expected to submit, organized by course.
+
+CREATE VIEW student_assignments_view AS
+SELECT s.studentID, CONCAT(s.firstName, ' ', s.lastName) AS studentName,
+       a.assignmentID, a.title, a.deadline, c.courseName
+FROM student s
+JOIN enrollment e ON s.studentID = e.studentID
+JOIN course c ON e.courseID = c.courseID
+JOIN assignment a ON a.courseID = c.courseID;
+
+select * from student_assignments_view;
+
+
+
+-- 2. Instructor View: Assignments per Course Taught ,Purpose: Allows instructors to view all assignments they are responsible for.
+CREATE VIEW instructor_assignment_view AS
+SELECT i.instructorID, CONCAT(i.firstName, ' ', i.lastName) AS instructorName,
+       c.courseName, a.assignmentID, a.title, a.deadline
+FROM instructor i
+JOIN course c ON i.instructorID = c.instructorID
+JOIN assignment a ON a.courseID = c.courseID;
+
+select * from instructor_assignment_view;
+
+-- 3. Assignment Due Listing for Instructors, Purpose: Sorted list of upcoming deadlines for each instructor.
+
+CREATE VIEW instructor_due_assignments AS
+SELECT i.instructorID, c.courseName, a.title AS assignmentTitle, a.deadline
+FROM instructor i
+JOIN course c ON i.instructorID = c.instructorID
+JOIN assignment a ON a.courseID = c.courseID
+ORDER BY a.deadline ASC;
+
+select * from instructor_due_assignments;
+
+
+-- 4. Reminders for Students , Purpose: Students can see their assignment reminders without accessing the reminder table directly.
+
+CREATE VIEW student_reminder_view AS
+SELECT r.studentID, s.firstName, s.lastName, a.title AS assignmentTitle, r.reminderDateTime, r.message
+FROM reminder r
+JOIN student s ON r.studentID = s.studentID
+JOIN assignment a ON r.assignmentID = a.assignmentID
+ORDER BY r.reminderDateTime ASC;
+
+select * from student_reminder_view;
+
+-- 
+
 
 
 
