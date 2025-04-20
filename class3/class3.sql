@@ -167,6 +167,10 @@ value
 (305 , 'chat bot', 'create a chatbot with flask and pandas' , '2025-04-29', 104),
 (306, 'inorganic chemistry' , 'write down the molecular formulas new' , '2025-05-10', 103);
 
+insert into assignment ( assignmentID,title,descripton,deadline,courseID)
+values 
+( 307, 'web scrapper', 'create a web scrapping tool with selenium' ,'2025-05-10',104);
+
 
 -- filling the reminder table 
 
@@ -313,7 +317,90 @@ ORDER BY r.reminderDateTime ASC;
 
 select * from student_reminder_view;
 
--- 
+
+
+
+
+
+-- To optimize the database solution, creating procedures/ triggers to implement the search/ manipulate operation.
+
+
+-- 1. Stored Procedure to Search Assignments by Course
+
+DELIMITER //
+
+CREATE PROCEDURE GetAssignmentsByCourse(IN courseNameInput VARCHAR(100))
+BEGIN
+    SELECT a.assignmentID, a.title, a.descripton, a.deadline, c.courseName
+    FROM assignment a
+    JOIN course c ON a.courseID = c.courseID
+    WHERE c.courseName LIKE CONCAT('%', courseNameInput, '%');
+END;
+//
+DELIMITER ;
+
+-- example of Procedure call
+CALL GetAssignmentsByCourse('chem');
+
+
+-- //Stored procedure to list all assignment for a student 
+
+DELIMITER //
+
+CREATE PROCEDURE GetAssignmentForStudent ( IN StudentIdInput INT) 
+BEGIN 
+	select s.studentID, CONCAT(s.firstName,' ',s.lastName) as studentName , a.assignmentID, a.title,a.deadline , c.courseName
+    from student s 
+    join enrollment e on s.studentID = e.studentID
+    join course c on e.courseID= c.courseID
+    join assignment a on c.courseID = a.courseID
+    where s.studentID = StudentIdInput;
+END;
+
+//
+DELIMITER;
+
+CALL GetAssignmentForStudent(204);
+
+
+-- creating triggers 
+
+-- 1. Trigger to Send Reminder Entry for Approaching Deadlines, creating a simplified logic to auto-insert reminders 2 days before deadlines.
+
+DELIMITER //
+
+CREATE TRIGGER CreateReminderOnAssignmentInsert
+AFTER INSERT ON assignment
+FOR EACH ROW
+BEGIN
+    DECLARE reminderDate DATETIME;
+    SET reminderDate = DATE_SUB(NEW.deadline, INTERVAL 2 DAY);
+
+    INSERT INTO reminder (reminderID,assignmentID, studentID, reminderDateTime, message)
+    SELECT NEW.assignmentID+1, NEW.assignmentID, e.studentID, reminderDate,
+           CONCAT('Reminder: Assignment "', NEW.title, '" is due soon.')
+    FROM enrollment e
+    WHERE e.courseID = NEW.courseID;
+END;
+//
+
+DELIMITER ;
+
+
+
+
+-- As security is of concern for the user, provide suitable implementation to meet the requirements.	
+
+
+-- 1. Use Role-Based Access Control (RBAC), Creating different MySQL users for different roles and grant only necessary permissions.
+
+-- Instructor user
+CREATE USER 'instructor_user'@'%' IDENTIFIED BY 'StrongPassword123!';
+
+CREATE USER 'student_user'@'%' IDENTIFIED BY 'pass';
+
+
+CREATE USER 'admin_user'@'%' IDENTIFIED BY 'admin';
 
 
 
@@ -321,4 +408,43 @@ select * from student_reminder_view;
 
 
 
-	
+
+
+
+
+-- Instructors can only view courses and assignments, and update grades
+GRANT SELECT, UPDATE ON course TO 'instructor_user'@'%';
+GRANT SELECT, INSERT, UPDATE ON assignment_submission TO 'instructor_user'@'%';
+
+
+GRANT SELECT ON course to 'student_user'@'%';
+GRANT SELECT ON assignment to 'student_user'@'%';
+GRANT SELECT,insert ON assignment_submission to 'student_user'@'%';
+
+
+GRANT ALL privileges ON *.* TO 'admin_user'@'%' WITH GRANT OPTION;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
