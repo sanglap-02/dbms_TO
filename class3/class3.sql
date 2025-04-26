@@ -1,16 +1,13 @@
-show databases;
+-- creating the database where all the tables will be created
+create database coursework_management_system;
+
+-- swithing the context to this databse
+use coursework_management_system;
 
 
--- seeding 
- 
--- this is the database name 
-create database CMS;
+-- 1. creating all the tables with appropiate schemas
 
-use CMS;
-
-
-
--- create the student table with all the nessasary attribute and studentID as the primary key  
+-- creating the student table with all the nessasary attribute and studentID as the primary key  
 create table student (
 
 	studentID int primary key ,
@@ -21,8 +18,7 @@ create table student (
     password varchar(100) not null
     
 );
-
--- this is the course tabel with primary key courseID and we haven'nt created the foreign key yet , we will do that laket
+-- creating course tabel with primary key courseID and we haven'nt created the foreign key yet , we will do that laket
 create table course (
 	courseID int primary key ,
     courseName varchar(1000) not null,
@@ -40,6 +36,8 @@ create table instructor (
     password varchar(100) not null
 );
 
+
+-- creating the assignment table with assignmentID as primary key
 create table assignment (
 	assignmentID int primary key ,
     title varchar(100) not null,
@@ -48,7 +46,7 @@ create table assignment (
     courseID int
 );
 
-
+-- creating the reminder table with reminderID as primary key
 create table reminder(
 	reminderID int primary key ,
     assignmentID int not null,
@@ -56,14 +54,14 @@ create table reminder(
     message varchar(1000) ,
     studentID int 
 ) ;
-
+-- creating the enrollment table with id as primary key
 create table enrollment (
 	id int primary key ,
 	studentID int not null,
     courseID int not null
 );
 
-
+-- creating the assignment_submission table with id as primary key
 create table assignment_submission (
 
 	id int primary key ,
@@ -72,58 +70,60 @@ create table assignment_submission (
 
 );
 
--- create the fk ( DML query ) 
+-- 2. establishing the realtionships between the tables ( creating the foreign keys ) 
+
+-- creating the FK between course and instructor table , FK here is instructorID
 alter table course
 add constraint fk_course_instructor
 foreign key (instructorID)
 references instructor(instructorID);
 
-
+-- creating the FK between assignment and course table , FK here is courseID
 alter table assignment
 add constraint fk_assignment_course
 foreign key (courseID)
 references course(courseID);
 
-
+-- creating the FK between reminder and assignment table , FK here is assignmentID
 alter table reminder
 add constraint fk_assignment_reminder
 foreign key (assignmentID)
 references assignment(assignmentID);
 
+-- creating the FK between reminder and student table , FK here is studentID
 alter table reminder
 add constraint fk_assignment_student
 foreign key (studentID)
 references student(studentID);
 
+-- creating the FK between enrollment and student table , FK here is studentID
 alter table enrollment
 add constraint fk_enrollment_student
 foreign key (studentID)
 references student(studentID);
 
+-- creating the FK between enrollment and course table , FK here is courseID
 alter table enrollment
 add constraint fk_enrollment_course
 foreign key (courseID)
 references course(courseID);
 
+-- creating the FK between assignment_submission and student table , FK here is studentID
 alter table assignment_submission
 add constraint fk_assignment_submission_student
 foreign key (studentID)
 references student(studentID);
 
+-- creating the FK between assignment_submission and assignment table , FK here is assignmentID
 alter table assignment_submission
 add constraint fk_assignment_submission_assignment
 foreign key (assignmentID)
 references assignment(assignmentID);
 
 
-
-select * from course ;
-
-use CMS;
-
+-- 3. filling the tables , so demo purpose
 
 -- filling up the student table
-select * from student;
 insert into student (studentID , firstName, middleName , lastName ,Email, password)
 values
 (201, 'Alice', 'M.', 'Wong', 'alice.wong@example.com', 'alice123'),
@@ -132,9 +132,9 @@ values
 ( 204 ,'jon',null, 'doe','jon.doe@gamil.com','pass'),
 ( 205 ,'ram','mid', 'sam','ram.sam@gamil.com','password');
 
+select * from student;
 
 -- filling the data in instructor table
-select * from instructor;
 
 insert into instructor (instructorID , firstName, middleName , lastName ,email, password)
 values 
@@ -143,6 +143,7 @@ values
 ( 3 ,'deniel',null, 'job','deniel.job@gamil.com','pass'),
 ( 4 ,'natalia',null, 'smith','natalia.smith@gamil.com' , 'pass');
 
+select * from instructor;
 
 -- filling the data in course table
 insert into course (courseID,courseName,credit,instructorID)
@@ -156,7 +157,6 @@ select * from course;
 
 
 -- filling the data in assignment table 
-select * from assignment;
 
 insert into assignment ( assignmentID,title,descripton,deadline,courseID)
 value 
@@ -167,14 +167,16 @@ value
 (305 , 'chat bot', 'create a chatbot with flask and pandas' , '2025-04-29', 104),
 (306, 'inorganic chemistry' , 'write down the molecular formulas new' , '2025-05-10', 103);
 
+-- creating this assignment to demostrate the trigger that we will create in the later portion
+
 insert into assignment ( assignmentID,title,descripton,deadline,courseID)
-values 
+value 
 ( 307, 'web scrapper', 'create a web scrapping tool with selenium' ,'2025-05-10',104);
 
+select * from assignment;
 
 -- filling the reminder table 
 
-select * from reminder;
 
 insert into reminder (reminderID, assignmentID,reminderDateTime,message,studentID)
 values 
@@ -183,14 +185,17 @@ values
 ( 3, 305 ,'2025-04-28' , 'I need to submit the pyhton assignment' ,'204' ) ,
 ( 4, 306 ,'2025-05-08', 'I need to submit the inorganic chemistry assignment' ,'205' );
 
+
+
 -- adding some reminders that are in the past
 insert into reminder (reminderID, assignmentID,reminderDateTime,message,studentID)
 values 
 ( 5, 306 ,'2025-04-17', 'I need to submit the inorganic chemistry assignment - early reminder' ,'205' );
+
+
+select * from reminder;
+
 -- fillign the data in enrollment table
-
-select * from enrollment;
-
 
 insert into enrollment ( id, studentID,courseID)
 values 
@@ -201,18 +206,22 @@ values
 (5, 204, 104),
 (6, 205, 103);
 
+select * from enrollment;
+
+
 
 -- filling the assignment_submission table 
 
-select * from assignment_submission;
 
 insert into assignment_submission ( id, studentID,assignmentID)
 value 
 ( 1, 204 , 304) ;
 
+select * from assignment_submission;
 
--- the 2nd question in the assignment : we are shoing the assignment from a perticular student , so we frist need to select the student we want to check the assignment for 
 
+-- 4. doing all the questions in the assignment from b. to f.
+-- the b. question in the assignment : shoing the assignment from a perticular student , frist I need to select the student that I want to check the assignment for 
 select a.assignmentID , 
 		a.title,
         a.descripton,
@@ -231,8 +240,7 @@ join
 where s.studentID= '205';
 
 
--- the thrid question : here we are showing the assignment title and deadline for respective instructors 
-
+-- the c. question : here I am showing the assignment title and deadline for respective instructors 
 select
 	a.title,
 	a.deadline,
@@ -243,8 +251,7 @@ assignment a
 join course c on a.courseID= c.courseID
 join instructor i on c.instructorID = i.instructorID;
 
-
--- fourth question : we are shoing the upcomign reminders for respective assignments that are upcoming and we are doing it by the NOW() function in myslq 
+-- d. question : I am shoing the upcomign reminders for respective assignments that are upcoming and I am doing it by the NOW() function in myslq 
 
 select 
 	a.title,
@@ -256,8 +263,7 @@ assignment a
 join reminder r on a.assignmentID= r.assignmentID
 where r.reminderDateTime >= NOW();
 
--- fifth question : we are showing the assignment those are submitted with the course and respective instructor
-
+-- e. question : I am showing the assignment those are submitted with the course and respective instructor
 select 
 	a.title,
 	c.courseName,
@@ -268,7 +274,7 @@ join course c on a.courseID= c.courseID
 join instructor i on c.instructorID=i.instructorID
 join assignment_submission s on a.assignmentID=s.assignmentID;
 
--- creating show case the required details to provide restriction on the data
+-- question number f. :  creating show case the required details to provide restriction on the data
 
 -- 1. student view : view their own assignment with course info, Purpose: Shows all assignments that a student is expected to submit, organized by course.
 
@@ -281,8 +287,6 @@ JOIN course c ON e.courseID = c.courseID
 JOIN assignment a ON a.courseID = c.courseID;
 
 select * from student_assignments_view;
-
-
 
 -- 2. Instructor View: Assignments per Course Taught ,Purpose: Allows instructors to view all assignments they are responsible for.
 CREATE VIEW instructor_assignment_view AS
@@ -320,7 +324,7 @@ select * from student_reminder_view;
 
 
 
-
+-- question g.
 
 -- To optimize the database solution, creating procedures/ triggers to implement the search/ manipulate operation.
 
@@ -365,7 +369,7 @@ CALL GetAssignmentForStudent(204);
 
 -- creating triggers 
 
--- 1. Trigger to Send Reminder Entry for Approaching Deadlines, creating a simplified logic to auto-insert reminders 2 days before deadlines.
+-- Trigger to Send Reminder Entry for Approaching Deadlines, creating a simplified logic to auto-insert reminders 2 days before deadlines.
 
 DELIMITER //
 
@@ -389,7 +393,7 @@ DELIMITER ;
 
 
 
--- As security is of concern for the user, provide suitable implementation to meet the requirements.	
+-- question h.  As security is of concern for the user, provide suitable implementation to meet the requirements.	
 
 
 -- 1. Use Role-Based Access Control (RBAC), Creating different MySQL users for different roles and grant only necessary permissions.
@@ -401,14 +405,6 @@ CREATE USER 'student_user'@'%' IDENTIFIED BY 'pass';
 
 
 CREATE USER 'admin_user'@'%' IDENTIFIED BY 'admin';
-
-
-
-
-
-
-
-
 
 
 
